@@ -14,6 +14,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, c
 from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 from sqlalchemy.sql import func
 
+from logger_config import logger
 
 
 from pathlib import Path

@@ -1,10 +1,10 @@
-# Simplon/API_IA/sentiment_api.py
+# Simplon_Analise_Sentiment/API_IA/sentiment_api.py
 
 #import
 from nltk.sentiment import SentimentIntensityAnalyzer
 from fastapi import FastAPI
 from pydantic import BaseModel
-from loguru import logger
+from logger_config import logger
 
 app = FastAPI()
 sia = SentimentIntensityAnalyzer()
@@ -29,7 +29,6 @@ async def analyse(texte_obj: Texte):
         sentiment = sia.polarity_scores(texte_obj.texte)
         logger.info(f"Résultats: {sentiment}")
 
-        # ОБЯЗАТЕЛЬНО возвращаем dict с ключом "response"
         return {"response": sentiment}
 
     except Exception as e:

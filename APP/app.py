@@ -2,13 +2,14 @@ import streamlit as st
 import requests
 import os 
 from dotenv import load_dotenv 
-from loguru import logger
+from logger_config import logger
 
 load_dotenv()
 
 API_ROOT_URL =  f"http://{os.getenv('host')}:{os.getenv('port', '8000')}"
+#API_ANALISE_URL = "http://127.0.0.1:8001"    # порт API_DB для read
+API_ANALISE_URL = f"http://{os.getenv('host')}:{os.getenv('port2', '8001')}"
 
-API_ANALISE_URL = "http://127.0.0.1:8001"    # порт API_DB для read
 
 st.title("Lire une citation")
 
@@ -23,7 +24,7 @@ with st.form("search_by_id"):
     submitted = st.form_submit_button("Rechercher")
 # connaitre toutes les id
 # selectionne l'id
-# После поиска цитаты
+
 if submitted:
     try:
         response = requests.get(API_URL + str(quote_id))
@@ -32,8 +33,8 @@ if submitted:
             if data:
                 st.success(f"Citation avec ID {quote_id}")
                 st.info(data.get('text', 'text non trouvé'))
-                st.session_state['quote_text'] = data.get('text', '')  # сохраняем текст
-                # st.balloons()
+                st.session_state['quote_text'] = data.get('text', '')  # garder le sitation
+
             else:
                 st.warning(f"La citation {quote_id} n'est pas disponible dans la DB")
                 st.session_state['quote_text'] = ''
@@ -49,7 +50,7 @@ if submitted:
 if st.button("Analiser"):
     
     try:
-        # Получаем текст цитаты из session_state
+        # Prendre le text pour session_state
         texte = st.session_state.get('quote_text', '')
         logger.info(f"Texte à analyser: {texte}")
         if not texte:
