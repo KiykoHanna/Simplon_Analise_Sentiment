@@ -1,4 +1,4 @@
-#backend/modules/models.py
+#API_DB/modules/models.py
 
 # import
 from sqlalchemy.orm import declarative_base

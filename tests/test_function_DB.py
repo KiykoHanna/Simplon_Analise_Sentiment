@@ -60,7 +60,6 @@ def override_get_db_session(monkeypatch, db_session):
 def test_add_and_read_quote(SessionTest):
     text = {"text": "test"}
     
-    # Пишем в базу напрямую словарь
     write_db(SessionTest, text)
 
     df2 = read_db(SessionTest)

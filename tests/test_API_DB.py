@@ -2,7 +2,7 @@ import sys
 import os
 
 from fastapi.testclient import TestClient
-from API_DB.sentiment_api import app
+from API_DB.fastapi_DB import app
 
 client = TestClient(app)
 

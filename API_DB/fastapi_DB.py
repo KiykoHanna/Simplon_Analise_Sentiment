@@ -1,4 +1,4 @@
-# Simplon/API_DB/sentiment_api.py
+# API_DB/fastapi_DB.py
 
 from fastapi import FastAPI, HTTPException
 import uvicorn
@@ -43,7 +43,6 @@ class QuoteResponse(BaseModel):
     text : str
 
 
-
 # --- SQLAlchemy models ---
 Base = declarative_base()
 
@@ -51,7 +50,7 @@ Base = declarative_base()
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine)
 
-# creation si besoin de la base de données
+# --- creation si besoin de la base de données
 initialize_db(SessionLocal)
 
 # --- Configuration ---
@@ -123,6 +122,24 @@ def read_random_quotes():
     quote_data['id'] = random_id
     # retourne les résultats
     return quote_data
+
+@app.post("/write/")
+def write_quotes(payload: QuoteRequest):
+    # Запись
+    write_db(SessionLocal, {"text": payload.text})
+
+    # Чтение
+    df = read_db(SessionLocal)
+    df = df.reset_index().rename(columns={
+        "quote_id": "id",
+        "quote_text": "text"
+    })
+
+    return {
+        "count": len(df),
+        "items": df.to_dict(orient="records")
+    }
+
 
 if __name__ == "__main__":
     # 1 - on récupère le port de l'API
