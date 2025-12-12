@@ -3,25 +3,28 @@ import requests
 import os 
 import sys
 from dotenv import load_dotenv 
-
-ROOT = os.path.dirname(os.path.dirname(__file__))
-sys.path.append(ROOT)
-
 from logger_config import logger
 
 load_dotenv()
 
+# --- path ---
 API_DB_URL =  f"http://{os.getenv('host')}:{os.getenv('port', '8000')}"
-
 API_ANALISE_URL = f"http://{os.getenv('host')}:{os.getenv('port2', '8001')}"
 
-
+# --- choisir les modes ---
 st.title("Le Base de donnees de citations")
 
 mode = st.radio("Choisissez le mode:",
-         ("Creer le citation", "Lire le base de donne", "Choisire Aléatoire", "Choisire Par ID ", "Suprimer le sitation per ID"))
+         ("Créer une citation",
+          "Lire la base de données",
+          "Choisir une citation aléatoire",
+          "Choisir une citation par ID",
+          "Supprimer une citation par ID")
+          )
 
-if mode == "Creer le citation":
+
+# --- functionalite ---
+if mode == "Créer une citation":
 
     # get sitation
     quote_text = st.text_area("Entrez votre citation ici :")
@@ -30,50 +33,49 @@ if mode == "Creer le citation":
         quote_text = quote_text.strip()
         st.session_state['quote_text'] = quote_text
 
-        # Логируем ввод
+        # logging
         logger.info(f"Nouvelle citation entrée par l'utilisateur : {quote_text}")
-
         st.success("Citation enregistrée dans l'état de session.")
         st.info(quote_text)
 
-        # envoyer le text
-        try:
-            payload = {"text": quote_text}
-            response = requests.post(f"{API_DB_URL}/write/", json=payload)
-            response.raise_for_status() 
+        # Envoyer soulement une fois
+        if 'quote_sent' not in st.session_state or not st.session_state['quote_sent']:
+            try:
+                payload = {"text": st.session_state['quote_text']}
+                response = requests.post(f"{API_DB_URL}/write/", json=payload)
+                response.raise_for_status()
 
-            if response.status_code == 200:
-                st.success("Citation ajoutée avec succès dans la base de données.")
-                logger.info(f"Citation ajoutée dans la DB via API : {quote_text}")
-            else:
-                st.error(f"Erreur API lors de l'ajout : {response.status_code}")
-                logger.error(f"Erreur API lors de l'ajout de la citation : {response.status_code}")
-
-        except requests.exceptions.RequestException as e:
-            st.error(f"Impossible de se connecter à l'API : {e}")
-            logger.error(f"Erreur de connexion à l'API lors de l'ajout : {e}")
+                if response.status_code == 200:
+                    st.success("Citation ajoutée avec succès dans la base de données.")
+                    st.session_state['quote_sent'] = True  # помечаем как отправлено
+                    logger.info(f"Citation ajoutée dans la DB via API : {st.session_state['quote_text']}")
+                else:
+                    st.error(f"Erreur API lors de l'ajout : {response.status_code}")
+                    logger.error(f"Erreur API lors de l'ajout de la citation : {response.status_code}")
+            except requests.exceptions.RequestException as e:
+                st.error(f"Erreur lors de l'ajout de la citation : {e}")
+                logger.error(f"Erreur API lors de l'ajout de la citation : {e}")
 
     else:
         st.warning("Veuillez entrer une citation valide.")
         st.session_state['quote_text'] = ""
         logger.warning("L'utilisateur a tenté d'enregistrer une citation vide.")
 
-elif mode == "Lire le base de donne":
+elif mode == "Lire la base de données":
     st.session_state['quote_text'] = ""
     st.subheader("Toutes les citations de la base de données")
 
     try:
-        # GET-запрос к API для чтения всех цитат
+        # GET roquet pour lire tous
         response = requests.get(f"{API_DB_URL}/read/")
         response.raise_for_status() 
 
         data = response.json()
         if data:
-            # Отображаем все цитаты
+            # affichage
             for item in data:
                 st.info(f"ID {item['id']}: {item['text']}")
             
-            # Логирование
             logger.info(f"Lecture de la DB réussie. Nombre de citations: {len(data)}")
         else:
             st.warning("La base de données est vide.")
@@ -84,7 +86,7 @@ elif mode == "Lire le base de donne":
         logger.error(f"Erreur de connexion à l'API lors de la lecture de la DB : {e}")
 
 
-elif mode == "Choisire Aléatoire":
+elif mode == "Choisir une citation aléatoire":
 
     st.subheader("Citation Aléatoire")
     # afficher une citation aléatoire
@@ -110,19 +112,17 @@ elif mode == "Choisire Aléatoire":
             st.error(f"ERREUR : Impossible de se connecter à l'API à {API_URL}")
             st.warning("Veuillez vous assurer que le serveur Uvicorn est bien lancé en arrière-plan.")
 
-elif mode == "Choisire Par ID ":
+elif mode == "Choisir une citation par ID":
 
     # afficher une citation par ID
     st.subheader("Citation par ID")
     API_URL =  API_DB_URL + "/read/"
     # selectionne l'ID
-    # un formulaire
     with st.form("search_by_id"):
         quote_id = st.number_input("Entrez l'ID de la citation:", 
                                    min_value=1, step=1)
         submitted = st.form_submit_button("Rechercher")
-    # connaitre toutes les id
-    # selectionne l'id
+
     if submitted:
         # appel la route /read/id
         try : 
@@ -144,7 +144,7 @@ elif mode == "Choisire Par ID ":
             st.error(f"ERREUR : Impossible de se connecter à l'API à {API_URL}")
             st.warning("Veuillez vous assurer que le serveur Uvicorn est bien lancé en arrière-plan.")
 
-elif mode == "Suprimer le sitation per ID":
+elif mode == "Supprimer une citation par ID":
     st.subheader("Suppression d'une citation")
     
   
@@ -155,14 +155,11 @@ elif mode == "Suprimer le sitation per ID":
             st.warning("Veuillez entrer un ID valide.")
         else:
             try:
-                
                 response = requests.delete(API_DB_URL + "/delete/" + str(quote_id))
-
                 response.raise_for_status()
                 result = response.json()
 
                 st.session_state['quote_text'] = result.get('quote_text', '')
-
                 st.success(f"Citation supprimée avec ID {quote_id}")
 
 
@@ -172,7 +169,7 @@ elif mode == "Suprimer le sitation per ID":
                 st.error(f"Impossible de se connecter à l'API à {API_DB_URL}")
 
 
-if st.session_state['quote_text']:  # si il y a le text 
+if st.session_state['quote_text']:  # si il y a le text dans une session_state
     st.markdown("---")
     st.subheader("Analyse de la citation")
     if st.button("Analiser"):
@@ -186,11 +183,10 @@ if st.session_state['quote_text']:  # si il y a le text
             else:
                 payload = {"texte": texte}
                 response = requests.post(f"{API_ANALISE_URL}/analyse/", json=payload)
-                
-                # Проверка кода ответа
                 response.raise_for_status()
                 sentiment = response.json()
-                # Получаем результат анализа
+
+                # recevoir le result d'analise
                 sentiment_data = sentiment['response']
                 st.write(f"_{texte}_")
                 st.write(f"Polarité négative : {sentiment_data['neg']}")
@@ -198,8 +194,7 @@ if st.session_state['quote_text']:  # si il y a le text
                 st.write(f"Polarité positive : {sentiment_data['pos']}")
                 st.write(f"Score composé : {sentiment_data['compound']}")
 
-
-                # Интерпретация compound
+                # Interpretation compound
                 if sentiment_data['compound'] >= 0.05:
                     st.write("Sentiment global : Positif 😀")
                 elif sentiment_data['compound'] <= -0.05:
@@ -207,7 +202,6 @@ if st.session_state['quote_text']:  # si il y a le text
                 else:
                     st.write("Sentiment global : Neutre 😐")
 
-                # Логирование
                 logger.info(f"Résultats affichés pour citation {texte}: {sentiment}")
 
         except requests.exceptions.HTTPError as http_err:

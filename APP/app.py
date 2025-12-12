@@ -3,10 +3,6 @@ import requests
 import os 
 import sys
 from dotenv import load_dotenv 
-
-ROOT = os.path.dirname(os.path.dirname(__file__))
-sys.path.append(ROOT)
-
 from logger_config import logger
 
 load_dotenv()

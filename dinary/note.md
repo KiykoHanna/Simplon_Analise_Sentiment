@@ -101,9 +101,8 @@
 ├── APP
 │   ├── app.py
 │   ├── pages
-│   │   ├── accueil.py
-│   │   └── interaction.py
-
+│       ├── accueil.py
+│       └── interaction.py
 │
 ├── API_DB
 │   ├── data
@@ -117,8 +116,13 @@
 │   └── fastapi_IA.py
 |
 ├── tests
-│   └── fastapi_IA.py
+│   ├── test_init.py
+│   ├── test_APP.py
+│   ├── test_API_DB.py
+│   └── test_function_DB.py
+|
 ├── .env
+├── .gitignore
 ├── logger_config.py
 ├── README.md
 └── requirements.txt

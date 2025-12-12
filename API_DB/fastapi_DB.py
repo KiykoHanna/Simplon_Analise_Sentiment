@@ -1,4 +1,4 @@
-# API_DB/fastapi_DB.py
+# Simplon_Analise_Sentiment/API_DB/fastapi_DB.py
 
 from fastapi import FastAPI, HTTPException
 import uvicorn
@@ -15,26 +15,24 @@ from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 from sqlalchemy.sql import func
 
 from logger_config import logger
-
-
+from fastapi import HTTPException
+import random
 from pathlib import Path
 
-# Папка, где лежит sentiment_api.py
+# routes
 BASE_DIR = Path(__file__).resolve().parent  # API_DB
 
-# Папка data внутри API_DB
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)  # создаём папку, если нет
 
-# Полный путь к файлу базы
 DB_FILE_PATH = DATA_DIR / "DB_Citation.db"
 DATABASE_URL = f"sqlite:///{DB_FILE_PATH}"
 
 
-import random
+
 load_dotenv()
 
-# modèles pydantic
+#  --- modèles pydantic ---
 class QuoteRequest(BaseModel):
     text : str = Field(min_length=1, description="donnez un texte pour la citation")
 
@@ -66,7 +64,7 @@ def read_root():
 def insert_quote(quote : QuoteRequest):
     """Insère une nouvelle citation"""
 
-    # 1. trouver le dernier id dans le csv
+    # trouver le dernier id dans le csv
     df = read_db(SessionLocal)
 
     # 2. donne un id a ma citation
@@ -79,11 +77,9 @@ def insert_quote(quote : QuoteRequest):
 
     obj = {"id": new_id, "text": quote.text}
 
-    # 3.1 créer la nouvelle ligne
+    # créer la nouvelle ligne
     write_db(SessionLocal, obj)
 
-    # 4. pour la confirmation je vais envoyer à l'application
-    # la citation avec son id
     return obj
 
 @app.get("/read/", response_model=List[QuoteResponse])
@@ -107,7 +103,6 @@ def read_specific_quotes(id : int):
     quote_data["text"] = df.loc[id]["quote_text"]
     quote_data['id'] = id
     # retourne les résultats
-    
     return quote_data
 
 @app.get("/read/random/", response_model=QuoteResponse)
@@ -154,7 +149,7 @@ def delete_quote(id: int):
 
 
 if __name__ == "__main__":
-    # 1 - on récupère le port de l'API
+    # on récupère le port de l'API
     try:
         print("Hello")
         port_str: str = os.getenv("FAST_API_PORT", "8000")
@@ -165,7 +160,7 @@ if __name__ == "__main__":
         print("ERREUR")
         port = 8080
 
-    # 2 - On lance uvicorn
+    # On lance uvicorn
     uvicorn.run(
         "main:app", 
         host = url,

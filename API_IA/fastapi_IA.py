@@ -1,14 +1,16 @@
-# Simplon_Analise_Sentiment/API_IA/sentiment_api.py
+# Simplon_Analise_Sentiment/API_IA/fastapi_IA.py
 
 #import
 from nltk.sentiment import SentimentIntensityAnalyzer
 from fastapi import FastAPI
 from pydantic import BaseModel
 from logger_config import logger
+from fastapi import HTTPException
 
 app = FastAPI()
 sia = SentimentIntensityAnalyzer()
 
+# --- Modeles PYDANTIC ---
 class Texte(BaseModel):
     texte: str
     

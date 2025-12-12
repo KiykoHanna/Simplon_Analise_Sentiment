@@ -3,23 +3,23 @@ import pytest
 from unittest.mock import patch, MagicMock
 import streamlit as st
 
-# Имитация Streamlit session_state
+# Imitation Streamlit session_state
 st.session_state.clear()
 
-# Test searche quote
+# --- Test searche quote ---
 def test_search_quote():
     with patch("requests.get") as mock_get:
-        # Настраиваем мок ответа API
+        # reponce API
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"text": "Test citation"}
         mock_get.return_value = mock_response
 
-        # Симуляция ввода ID цитаты
+        # Cimulation citation
         quote_id = 1
         API_URL = f"http://fake-api/read/"
 
-        # Имитация логики поиска
+        # logique
         response = mock_get(f"{API_URL}{quote_id}")
         if response.status_code == 200:
             data = response.json()
@@ -33,13 +33,13 @@ def test_search_quote():
         assert st.session_state['quote_text'] == "Test citation"
 
 
-# --- Тест анализа цитаты ---
+# --- Test Analise citation ---
 def test_analyse_quote():
     st.session_state['quote_text'] = "Test citation"
     API_ANALISE_URL = "http://fake-analyse"
 
     with patch("requests.post") as mock_post:
-        # Настраиваем мок ответа API анализа
+        # mock de reponse API analise
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
