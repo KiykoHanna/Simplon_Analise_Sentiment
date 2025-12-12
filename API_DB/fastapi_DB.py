@@ -7,7 +7,7 @@ import pandas as pd
 from dotenv import load_dotenv 
 from pydantic import BaseModel, Field
 
-from .modules.db_tools import read_db, write_db, initialize_db
+from .modules.db_tools import read_db, write_db, initialize_db, delete_db
 from typing import List, Annotated
 
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, create_engine, Table
@@ -42,6 +42,8 @@ class QuoteResponse(BaseModel):
     id : int
     text : str
 
+class QuoteID(BaseModel):
+    id: int
 
 # --- SQLAlchemy models ---
 Base = declarative_base()
@@ -125,10 +127,9 @@ def read_random_quotes():
 
 @app.post("/write/")
 def write_quotes(payload: QuoteRequest):
-    # Запись
+
     write_db(SessionLocal, {"text": payload.text})
 
-    # Чтение
     df = read_db(SessionLocal)
     df = df.reset_index().rename(columns={
         "quote_id": "id",
@@ -138,6 +139,24 @@ def write_quotes(payload: QuoteRequest):
     return {
         "count": len(df),
         "items": df.to_dict(orient="records")
+    }
+
+@app.delete("/delete/", response_model=QuoteResponse)
+def delete_quote(id: QuoteID):
+    session = SessionLocal()
+    
+    df = read_db(SessionLocal)
+    # filtre par l'id concerné  
+    if df.empty:
+        raise HTTPException(status_code=404, detail=f"Citation non trouvée")
+    
+        
+    session.delete(id.id)
+    session.commit()
+        
+    return {
+        "quote_id": id.id,
+        "quote_text": df.loc[id.id]["quote_text"]
     }
 
 

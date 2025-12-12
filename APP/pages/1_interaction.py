@@ -19,7 +19,7 @@ API_ANALISE_URL = f"http://{os.getenv('host')}:{os.getenv('port2', '8001')}"
 st.title("Le Base de donnees de citations")
 
 mode = st.radio("Choisissez le mode:",
-         ("Creer le citation", "Lire le base de donne", "Choisire Aléatoire", "Choisire Par ID "))
+         ("Creer le citation", "Lire le base de donne", "Choisire Aléatoire", "Choisire Par ID ", "Suprimer le sitation per ID"))
 
 if mode == "Creer le citation":
 
@@ -143,6 +143,33 @@ elif mode == "Choisire Par ID ":
         except requests.exceptions.ConnectionError:
             st.error(f"ERREUR : Impossible de se connecter à l'API à {API_URL}")
             st.warning("Veuillez vous assurer que le serveur Uvicorn est bien lancé en arrière-plan.")
+
+elif mode == "Supprimer la citation par ID":
+    st.subheader("Suppression d'une citation")
+    
+    # Ввод ID цитаты
+    quote_id = st.number_input("Entrez l'ID de la citation à supprimer:", min_value=1, step=1)
+    
+    if st.button("Supprimer la citation"):
+        if not quote_id:
+            st.warning("Veuillez entrer un ID valide.")
+        else:
+            try:
+                # Передаем ID в JSON
+                response = requests.delete(API_DB_URL + "/delete/", json={"id": quote_id})
+                response.raise_for_status()
+                result = response.json()
+
+                st.session_state['quote_text'] = result.get('quote_text', '')
+
+                st.success(f"Citation supprimée avec ID {result.get('quote_id', 'N/A')}")
+                st.info(result.get('quote_text', 'text non trouvé'))
+
+            except requests.exceptions.HTTPError as e:
+                st.error(f"Erreur de l'API lors de la suppression : {e}")
+            except requests.exceptions.ConnectionError:
+                st.error(f"Impossible de se connecter à l'API à {API_DB_URL}")
+
 
 if st.session_state['quote_text']:  # появляется только если есть текст
     st.markdown("---")

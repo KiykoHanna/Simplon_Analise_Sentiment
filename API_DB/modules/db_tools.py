@@ -1,5 +1,5 @@
 # API_DB/modules/df_tools.py
-from loguru import logger 
+from logger_config import logger 
 import pandas as pd
 import os 
 
@@ -73,4 +73,19 @@ def initialize_db(SessionLocal):
         session.close()
         logger.info(f"le fichier {DB_FILE_PATH} a été créé")
     
-    
+# DELETE
+def delete_db(SessionLocal, id: int):
+    session = SessionLocal()
+    try:
+        quote = session.query(Quote).filter(Quote.quote_id == id).first()
+        if quote:
+            session.delete(quote)
+            session.commit()
+        else:
+            raise ValueError(f"Quote with id {id} not found")
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
+        logger.info(f"le objet avec id: {id} a été suprimer")
