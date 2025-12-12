@@ -23,10 +23,10 @@ mode = st.radio("Choisissez le mode:",
 
 if mode == "Creer le citation":
 
-    # Получаем текст от пользователя
+    # get sitation
     quote_text = st.text_area("Entrez votre citation ici :")
 
-    if quote_text.strip():  # Проверка, что текст не пустой
+    if quote_text.strip(): 
         quote_text = quote_text.strip()
         st.session_state['quote_text'] = quote_text
 
@@ -36,11 +36,11 @@ if mode == "Creer le citation":
         st.success("Citation enregistrée dans l'état de session.")
         st.info(quote_text)
 
-        # Отправляем POST-запрос на API для записи в БД
+        # envoyer le text
         try:
             payload = {"text": quote_text}
             response = requests.post(f"{API_DB_URL}/write/", json=payload)
-            response.raise_for_status()  # вызовет исключение для HTTP ошибок
+            response.raise_for_status() 
 
             if response.status_code == 200:
                 st.success("Citation ajoutée avec succès dans la base de données.")
@@ -65,7 +65,7 @@ elif mode == "Lire le base de donne":
     try:
         # GET-запрос к API для чтения всех цитат
         response = requests.get(f"{API_DB_URL}/read/")
-        response.raise_for_status()  # Проверка на HTTP ошибки
+        response.raise_for_status() 
 
         data = response.json()
         if data:
@@ -144,10 +144,10 @@ elif mode == "Choisire Par ID ":
             st.error(f"ERREUR : Impossible de se connecter à l'API à {API_URL}")
             st.warning("Veuillez vous assurer que le serveur Uvicorn est bien lancé en arrière-plan.")
 
-elif mode == "Supprimer la citation par ID":
+elif mode == "Suprimer le sitation per ID":
     st.subheader("Suppression d'une citation")
     
-    # Ввод ID цитаты
+  
     quote_id = st.number_input("Entrez l'ID de la citation à supprimer:", min_value=1, step=1)
     
     if st.button("Supprimer la citation"):
@@ -155,15 +155,16 @@ elif mode == "Supprimer la citation par ID":
             st.warning("Veuillez entrer un ID valide.")
         else:
             try:
-                # Передаем ID в JSON
-                response = requests.delete(API_DB_URL + "/delete/", json={"id": quote_id})
+                
+                response = requests.delete(API_DB_URL + "/delete/" + str(quote_id))
+
                 response.raise_for_status()
                 result = response.json()
 
                 st.session_state['quote_text'] = result.get('quote_text', '')
 
-                st.success(f"Citation supprimée avec ID {result.get('quote_id', 'N/A')}")
-                st.info(result.get('quote_text', 'text non trouvé'))
+                st.success(f"Citation supprimée avec ID {quote_id}")
+
 
             except requests.exceptions.HTTPError as e:
                 st.error(f"Erreur de l'API lors de la suppression : {e}")
@@ -171,7 +172,7 @@ elif mode == "Supprimer la citation par ID":
                 st.error(f"Impossible de se connecter à l'API à {API_DB_URL}")
 
 
-if st.session_state['quote_text']:  # появляется только если есть текст
+if st.session_state['quote_text']:  # si il y a le text 
     st.markdown("---")
     st.subheader("Analyse de la citation")
     if st.button("Analiser"):

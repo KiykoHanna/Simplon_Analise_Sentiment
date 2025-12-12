@@ -141,23 +141,16 @@ def write_quotes(payload: QuoteRequest):
         "items": df.to_dict(orient="records")
     }
 
-@app.delete("/delete/", response_model=QuoteResponse)
-def delete_quote(id: QuoteID):
-    session = SessionLocal()
-    
-    df = read_db(SessionLocal)
-    # filtre par l'id concerné  
-    if df.empty:
-        raise HTTPException(status_code=404, detail=f"Citation non trouvée")
-    
-        
-    session.delete(id.id)
-    session.commit()
-        
-    return {
-        "quote_id": id.id,
-        "quote_text": df.loc[id.id]["quote_text"]
-    }
+
+
+@app.delete("/delete/{id}")
+def delete_quote(id: int):
+    try:
+        delete_db(SessionLocal, id)
+        return {"message": f"Quote {id} deleted"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 if __name__ == "__main__":
