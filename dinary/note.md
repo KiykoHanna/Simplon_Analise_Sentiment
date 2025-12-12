@@ -97,6 +97,7 @@
 - gestion des erreurs (modèle indisponible, input vide)
 
 ## Architecture
+```
 .
 ├── APP
 │   ├── app.py
@@ -126,5 +127,5 @@
 ├── logger_config.py
 ├── README.md
 └── requirements.txt
-
+```
 
